@@ -1,0 +1,15 @@
+.fc-past:hover {
+    background: #FFFFFF;
+}
+
+.fc-today:hover {
+    background: #FFFFFF;
+}
+
+.fc-future:hover {
+    background: #FFFFFF;
+}
+
+ .fc-unthemed .fc-today {
+    background: #FFFFFF;
+}

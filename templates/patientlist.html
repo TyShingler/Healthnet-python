@@ -1,0 +1,247 @@
+<!-- Import NavBar & CDNs-->
+{% include 'navbar.html' %}
+
+<!-- HTML Content-->
+{% block content %}
+    <div class="well col-md-10 col-md-offset-1">
+        <table id="patients" class="display" cellspacing="0" width="100%">
+            <thead>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Birth Date</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>P</th>
+                <th>P</th>
+                <th>Primary Hospital</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Birth Date</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>P</th>
+                <th>P</th>
+                <th>Primary Hospital</th>
+            </tr>
+            </tfoot>
+            <tbody>
+            {% for patient in patients %}
+                <tr>
+                    <td>{{ patient.first_name }}</td>
+                    <td>{{ patient.last_name }}</td>
+                    <td>{{ patient.birthdate }}</td>
+                    <td>{{ patient.email|escapejs }}</td>
+                    <td>{{ patient.phone }}</td>
+                    <td>{{ patient.status }}</td>
+                    <td>{{ patient.username }}</td>
+                    <td>{{ patient.sex }}</td>
+                    <td>{{ patient.preferred_hospital }}</td>
+                    <td>{{ patient.pk }}</td>
+                    <td>{{ patient.primary_physician }}</td>
+                    <td>{{ patient.last_physical }}</td>
+                    <td>{{ patient.health_history }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="viewPatient" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Header-->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 id="modalTitle" class="modal-title"></h4>
+                </div>
+
+                <!-- Body / Render Forms-->
+                <form id="patientform" action="/admitpatient/" method="POST">
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            <table id="profile" class="display" cellspacing="0" width="100%">
+                                <tbody>
+                                <tr>
+                                    <td><b>Username</b></td>
+                                    <td id="username">{{ user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Birthdate</b></td>
+                                    <td id="birthdate">{{ user.birthdate }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Email</b></td>
+                                    <td id="email">{{ user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Sex</b></td>
+                                    <td id="sex">{{ user.sex }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Phone Number</b></td>
+                                    <td id="phone">{{ user.phone }}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <br>
+
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="id_u_primary_physician">Primary Physician</label>
+                                    {{ form.u_primary_physician }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_u_last_physical">Last Physical</label>
+                                    {{ form.u_last_physical }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label for="id_u_last_physical">Primary Hospital</label>
+                                    {{ form.u_preferred_hospital }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label for="id_u_health_history">Health History</label>
+                                    {{ form.u_health_history }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        {% csrf_token %}
+                        <input type="submit" onclick="setSave()" class="btn btn-primary" value="Save Changes">
+{#                        <button type="button" onclick="setExport()" class="btn btn-primary">Export Profile</button>#}
+                        <input id="admitbtn" type="submit" class="btn btn-primary" value="Admit Patient">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+<!-- JavaScript Content-->
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+
+            $('#modalTitle').css('font-weight', 'bold');
+
+            $('#patients').DataTable({
+                "bLengthChange": false,
+                "language": {
+                    "emptyTable": "There are no registered patients."
+                },
+                "fnRowCallback": function (nRow, aData, iDisplayIndex) {
+                    $(nRow).click(function () {
+                        $('#viewPatient').modal('show');
+                        $("#profile").find("tr:gt(5)").remove();
+                        $("#modalTitle").html(aData[0] + " " + aData[1]);
+                        $("#username").html(aData[6]);
+                        $("#birthdate").html(aData[2] + " (" + moment(aData[2]).fromNow().replace(" years ago", "") + " years old)");
+                        $("#email").html(aData[3]);
+                        $("#sex").html(aData[6]);
+                        $("#phone").html(aData[4]);
+                        $("#id_u_primary_physician").val(aData[10]);
+                        $("#id_u_last_physical").val(aData[11]);
+                        $("#id_u_health_history").val(aData[12]);
+                        $("#id_u_preferred_hospital").val(aData[8]);
+                        {% for prescription in prescriptions %}
+                            var preUser = "{{ prescription.patient }}".split(" ")[2].replace("(", "").replace(")", "");
+                            if (preUser == aData[5]) {
+                                $('#profile > tbody:last').append('<tr><td><b>Prescription:</b></td><td>{{ prescription.drugname }}</td></tr>');
+                            }
+                        {% endfor %}
+                        if (aData[5] == 'Discharged') {
+                            $("#admitbtn").val('Admit Patient');
+                            $("#patientform").get(0).setAttribute('action', '/admitpatient/' + aData[9]);
+                        } else {
+                            $("#admitbtn").val('Discharge Patient');
+                            $("#patientform").get(0).setAttribute('action', '/dischargepatient/' + aData[9]);
+                        }
+                    });
+                    return nRow;
+                },
+                "columnDefs": [
+                    {
+                        "targets": [6],
+                        "visible": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": [7],
+                        "visible": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": [2],
+                        "visible": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": [9],
+                        "visible": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": [10],
+                        "visible": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": [11],
+                        "visible": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": [12],
+                        "visible": false,
+                        "searchable": false
+                    }
+                ]
+            });
+
+            $('.dataTables_filter').each(function () {
+                $(this).prepend('<div class="container-fluid col-md-5"><div class="progress"> <div id="progbar" class="progress-bar" role="progressbar"' +
+                        'aria-valuenow="{{ admitted }}"aria-valuemin="0" aria-valuemax="200" style="width:' +
+                        '{{ admitted }}%">{{ admitted }}/200 Admitted Patients</div></div></div>');
+                $(this).prepend('<h4 style="float: left;"><b>Click a patient to admit/discharge, or to view details</b></h4>');
+            });
+
+            $('#profile').DataTable({
+                "bLengthChange": false,
+                "language": {
+                    "emptyTable": "No prescriptions."
+                }
+            });
+        });
+
+        {% for doctor in doctors %}
+            console.log("this ran")
+            $("#id_u_primary_physician").append($("<option />").text("Dr." + " {{ doctor.last_name }}"));
+        {% endfor %}
+
+        $("#id_u_preferred_hospital").append($("<option />").text("Strong Memorial Hospital"));
+        $("#id_u_preferred_hospital").append($("<option />").text("Highland Hospital"));
+
+        function setExport() {
+            var pk = $("#patientform").attr('action').split('/')[2];
+            window.location.href = "/exportUser/" + pk;
+        }
+
+        function setSave() {
+            var pk = $("#patientform").attr('action').split('/')[2];
+            $("#patientform").get(0).setAttribute('action', '/updatepatient/' + pk);
+        }
+    </script>
+{% endblock %}

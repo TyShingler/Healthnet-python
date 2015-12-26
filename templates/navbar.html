@@ -1,0 +1,191 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HealthNet Overview</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.5/lumen/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css"
+          href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.4.0/fullcalendar.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css">
+    {% if user.usertype == "patient" %}
+        <link id="css_patient" rel="stylesheet" href="{% static 'hnet/patient.css' %}">
+    {% elif user.usertype == "doctor" %}
+        <link id="css_doctor" rel="stylesheet" href="{% static 'hnet/doctor.css' %}">
+    {% elif user.usertype == "nurse" %}
+        <link id="css_nurse" rel="stylesheet" href="{% static 'hnet/nurse.css' %}">
+    {% elif user.usertype == "admin" %}
+        <link rel="stylesheet" href="{% static 'hnet/admin.css' %}">
+    {% endif %}
+    <link id="css_day" rel="stylesheet" href="{% static 'hnet/fc_dayview.css' %}">
+</head>
+<body>
+
+<nav class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+
+        <!-- Navbar Brand -->
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/dashboard/">HealthNet </a>
+        </div>
+
+        {% if user.usertype != 'admin' %}
+            <!-- Navbar Items from Left Side-->
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                       aria-expanded="false"><span class="glyphicon glyphicon-calendar"></span> Appointments
+                        <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        {% if request.path == '/dashboard/' or request.path == '/dashboard/apt' %}
+                            <li><a href="#" onclick="setDateAsToday()" data-target="#createAppointment"
+                                   data-toggle="modal">
+                                New Appointment </a></li>
+                        {% else %}
+                            <li><a href="/dashboard/apt">New Appointment </a></li>
+                        {% endif %}
+                        <li role="separator" class="divider"></li>
+                        <li><a href="/appointments/"> View Appointments </a></li>
+                    </ul>
+                </li>
+
+                {% if user.usertype == "patient" %}
+                    <li><a href="/prescriptions/"><span class="glyphicon glyphicon-asterisk"></span> Prescriptions</a>
+                    </li>
+                    <li><a href="/testresults/"><span class="glyphicon glyphicon-folder-open"></span> Medical Tests</a>
+                    </li>
+                    <li><a href="/medicalhistory/"><span class="glyphicon glyphicon-heart"></span> Medical Record</a>
+                    </li>
+                {% elif user.usertype == "nurse" or user.usertype == "doctor" %}
+                    {% if user.usertype == "doctor" %}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-haspopup="true"
+                               aria-expanded="false"><span class="glyphicon glyphicon-plus-sign"></span>
+                                Medications <span
+                                        class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="/prescribe/">Prescribe</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li><a href="/removeprescription/">Remove</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    <li><a href="/userlist/"><span class="glyphicon glyphicon-user"></span> Patients</a>
+                    <li><a href="/pendingtests/"><span class="glyphicon glyphicon-hourglass"></span> Pending Tests</a>
+                    </li>
+                {% endif %}
+            </ul>
+        {% else %}
+            <ul class="nav navbar-nav">
+                <li><a href="/permissions/"><span class="glyphicon glyphicon-cog"></span> Permissions</a></li>
+                <li><a href="/systemstats/"><span class="glyphicon glyphicon-stats"></span> System Statistics</a></li>
+            </ul>
+        {% endif %}
+        <!-- Navbar Items from Right Side-->
+        <ul class="nav navbar-nav navbar-right">
+            {% if user.usertype != 'admin' %}
+                <!-- Notifications dropdown-->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                       aria-expanded="false">
+                        <span class="glyphicon glyphicon-bell"></span></a>
+                    <ul class="dropdown-menu scrollable-menu" role="menu">
+                        <li><a href="/notifications" class=bg-hover><b>View All Notifications</b></a></li>
+                        <li role="separator" class="divider"></li>
+                        {% if not notifications %}
+                            <li><a href="#">You have no notifications</a></li>
+                        {% endif %}
+                        {% for notification in notifications %}
+                            {% if notification.type == 'appointment' %}
+                                {% if user.usertype == 'patient' %}
+                                    {% if notification.user == user.username %}
+                                        <li><a href="/appointments/">Appointment created with
+                                            Dr. {{ notification.doctor }}</a></li>
+                                    {% else %}
+                                        <li><a href="/appointments/">Dr. {{ notification.doctor }} created an
+                                            appointment with you</a></li>
+                                    {% endif %}
+                                {% elif user.usertype == 'nurse' %}
+                                    <li><a href="/appointments/">{{ notification.user }} created appointment
+                                        with {{ notification.doctor }}</a></li>
+                                {% elif user.usertype == 'doctor' %}
+                                    {% if not notification.user == user.username %}
+                                        <li><a href="/appointments/">{{ notification.data2 }} created appointment with
+                                            you</a></li>
+                                    {% else %}
+                                        <li><a href="/appointments/">You created an appointment
+                                            with {{ notification.data2 }}</a></li>
+                                    {% endif %}
+                                {% endif %}
+                            {% elif notification.type == 'message' %}
+                                <li><a href="/messages/"> {{ notification.data2 }} sent you a message</a></li>
+                            {% elif notification.type == 'prescription' %}
+                                <li><a href="/prescriptions/">You have a new prescription</a></li>
+                            {% elif notification.type == 'medicalresult' %}
+                                <li><a href="/testresults/">You have new test results</a></li>
+                            {% elif notification.type == 'medicaltest' %}
+                                <li><a href="/pendingtests/">You have a pending test request</a></li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </li>
+
+                <li><a href="/messages/"><span class="glyphicon glyphicon-envelope"></span></a></li>
+
+            {% endif %}
+
+            <!-- Account dropdown-->
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                   aria-expanded="false">
+                    {% if user.usertype == "patient" %}
+                        {{ user.first_name|safe|escape }} {{ user.last_name|safe|escape }}
+                    {% elif user.usertype == "doctor" %}
+                        Dr. {{ user.last_name|safe|escape }}
+                    {% elif user.usertype == "nurse" %}
+                        Nurse {{ user.last_name|safe|escape }}
+                    {% elif user.usertype == "admin" %}
+                        Administrator
+                    {% endif %}
+                    <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+
+                    {% if user.usertype != 'admin' %}
+                        <li><a>Signed in as {{ user.username }}</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="/profile/">View Profile</a></li>
+                        <li><a href="/editprofile/">Edit Profile</a></li>
+                    {% else %}
+                        <li><a>Signed in as Admin</a></li>
+                    {% endif %}
+                    <li role="separator" class="divider"></li>
+
+                    <li><a href="/logout/">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+{% block content %}
+
+{% endblock %}
+
+<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.4.0/fullcalendar.min.js"></script>
+<script src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.13.4/jquery.mask.js"></script>
+<script>
+    document.getElementById('css_day').disabled = true;
+</script>
+
+{% block javascript %}
+
+{% endblock %}
+
+</body>
+</html>

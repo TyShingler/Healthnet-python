@@ -1,0 +1,66 @@
+<!-- Import NavBar & CDNs-->
+{% include 'navbar.html' %}
+
+<!-- HTML Content-->
+{% block content %}
+    <div class="well col-md-8 col-md-offset-2">
+        <form action="/prescribe/" method="POST">
+            <h2 class="text-center">Prescribe Medication<Patient></Patient></h2>
+            <br>
+            <div class="container-fluid">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="id_doctor">Patient</label></br>
+                        {{ form.patient }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="id_date">Medication Name</label></br>
+                        {{ form.drugname }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="id_description">Dosage (in milligrams)</label>
+                        {{ form.dosage }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="id_description">Quantity (# of pills per refill)</label>
+                        {{ form.quantity }}
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="id_description">Description & Side Effects</label>
+                        {{ form.description }}
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="id_description">Instructions</label>
+                        {{ form.instructions }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="pull-right">
+                        {% csrf_token %}
+                        <input type="submit" class="btn btn-primary" value="Prescribe"/>
+                        <a type="button" class="btn btn-primary" href="/dashboard">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+<!-- JavaScript Content-->
+{% block javascript %}
+    <script>
+        {% for patient in patients %}
+            $("#id_patient").append($("<option />").text("{{ patient.first_name }} {{ patient.last_name }} ({{ patient.username }})"));
+        {% endfor %}
+    </script>
+{% endblock %}

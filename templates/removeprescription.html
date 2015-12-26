@@ -1,0 +1,144 @@
+<!-- Import NavBar & CDNs-->
+{% include 'navbar.html' %}
+
+<!-- HTML Content-->
+{% block content %}
+    <div class="well col-md-10 col-md-offset-1">
+        <table id="prescriptionsTable" class="display" cellspacing="0" width="100%">
+            <thead>
+            <tr>
+                <th>Drug Name</th>
+                <th>Dosage</th>
+                <th>Quantity</th>
+                <th>Prescribing Doctor</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>Drug Name</th>
+                <th>Dosage</th>
+                <th>Quantity</th>
+                <th>Prescribing Doctor</th>
+            </tr>
+            </tfoot>
+            <tbody>
+            {% for prescription in prescriptions %}
+                <tr>
+                    <td>{{ prescription.drugname }}</td>
+                    <td>{{ prescription.dosage }}</td>
+                    <td>{{ prescription.quantity }}</td>
+                    <td>{{ prescription.doctor }}</td>
+                    <td>{{ prescription.description }}</td>
+                    <td>{{ prescription.instructions }}</td>
+                    <td>{{ prescription.pk }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="prescription" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="removeForm" action="" method="POST">
+                    <!-- Header-->
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 id="modalTitle" class="modal-title">Prescription Information</h4>
+                    </div>
+
+                    <!-- Body / Render Forms-->
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            <table id="prescriptionTable" class="display" cellspacing="0" width="100%">
+                                <tbody>
+                                <tr>
+                                    <td><b>Dosage</b></td>
+                                    <td id="dosage">{{ user.birthdate }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Quantity</b></td>
+                                    <td id="quantity">{{ user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Prescribing Doctor</b></td>
+                                    <td id="prescriber">{{ user.sex }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Description</b></td>
+                                    <td id="description">{{ user.phone }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Instructions</b></td>
+                                    <td id="instructions">{{ user.preferred_hospital }}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Create 'Cancel' and 'Create' Button-->
+                    <div class="modal-footer">
+                        {% csrf_token %}
+                        <button id="admitbtn" type="submit" class="btn btn-primary">Remove Medication</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+<!-- JavaScript Content-->
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            $('#prescriptionsTable').DataTable({
+                "bLengthChange": false,
+                "language": {
+                    "emptyTable": "You have not prescribed any medication."
+                },
+                "fnRowCallback": function (nRow, aData, iDisplayIndex) {
+                    $(nRow).click(function () {
+                        $('#prescription').modal('show');
+                        $("#modalTitle").html(aData[0]);
+                        $("#dosage").html(aData[1]);
+                        $("#quantity").html(aData[2] + "mg");
+                        $("#prescriber").html(aData[3]);
+                        $("#description").html(aData[4]);
+                        $("#instructions").html(aData[5]);
+                        $("#removeForm").get(0).setAttribute('action', '/removeprescript/' + aData[6]);
+                    });
+                    return nRow;
+                },
+                "columnDefs": [
+                    {
+                        "targets": [4],
+                        "visible": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": [5],
+                        "visible": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": [6],
+                        "visible": false,
+                        "searchable": false
+                    }
+                ]
+            });
+
+            $('.dataTables_filter').each(function () {
+                $(this).prepend('<h4 style="float: left;"><b>Click a prescription to cancel it</b></h4>');
+            });
+
+            $('#prescriptionTable').DataTable({
+                "bLengthChange": false,
+                "language": {
+                    "emptyTable": "No data available."
+                }
+            });
+        });
+    </script>
+{% endblock %}

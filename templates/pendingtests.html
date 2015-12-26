@@ -1,0 +1,94 @@
+<!-- Import NavBar & CDNs-->
+{% include 'navbar.html' %}
+
+<!-- HTML Content-->
+{% block content %}
+    <div class="well col-md-10 col-md-offset-1">
+        <table id="testsTable" class="display" cellspacing="0" width="100%">
+            <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Test Name</th>
+                <th>Date Requested</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>Patient</th>
+                <th>Test Name</th>
+                <th>Date Requested</th>
+            </tr>
+            </tfoot>
+            <tbody>
+            {% for test in tests %}
+                <tr>
+                    <td>{{ test.patient }}</td>
+                    <td>{{ test.testname }}</td>
+                    <td>{{ test.date }}</td>
+                    <td>{{ test.pk }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="viewRequest" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Header-->
+                <form id="pendingtest" action="/returnresults/" method="POST">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 id="modalTitle" class="modal-title">Pending Test: {{ test.testname }}</h4>
+                    </div>
+
+                    <!-- Body / Render Forms-->
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            <label for="username">Results</label></br>
+                            <td id="username">{{ form.results }}</td>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        {% csrf_token %}
+                        <input type="submit" class="btn btn-primary" value="Submit Results">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+<!-- JavaScript Content-->
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            $('#testsTable').DataTable({
+                "bLengthChange": false,
+                "language": {
+                    "emptyTable": "There are no pending tests."
+                },
+                "fnRowCallback": function (nRow, aData, iDisplayIndex) {
+                    $(nRow).click(function () {
+                        $('#viewRequest').modal('show');
+                        document.getElementById('pendingtest').action = '/returnresults/' + aData[3];
+                    });
+                    return nRow;
+                },
+                "columnDefs": [
+                    {
+                        "targets": [ 3 ],
+                        "visible": false,
+                        "searchable": false
+                    }
+                ]
+            });
+
+            $('.dataTables_filter').each(function () {
+                $(this).prepend('<h4 style="float: left;"><b>Click a pending test to return results</b></h4>');
+            });
+        });
+
+    </script>
+{% endblock %}

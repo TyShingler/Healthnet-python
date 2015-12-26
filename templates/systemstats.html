@@ -1,0 +1,84 @@
+{% include 'navbar.html' %}
+
+{% block content %}
+    <div class="well col-md-10 col-md-offset-1">
+        <table id="stats" class="display" cellspacing="0" width="100%">
+            <tbody>
+            <tr>
+                <td><b>Total Users:</b></td>
+                <td>{{ totalUsers }}</td>
+            </tr>
+            <tr>
+                <td><b>Total Patients:</b></td>
+                <td>{{ stats.totalPatients }}</td>
+            </tr>
+            <tr>
+                <td><b>Total Nurses:</b></td>
+                <td>{{ stats.totalNurses }}</td>
+            </tr>
+            <tr>
+                <td><b>Total Doctors:</b></td>
+                <td>{{ stats.totalDoctors }}</td>
+            </tr>
+            <tr>
+                <td><b>Total Administrators:</b></td>
+                <td>{{ stats.totalAdmins }}</td>
+            </tr>
+            <tr>
+                <td><b>Appointments Created</b></td>
+                <td>{{ stats.appointmentsCreated }}</td>
+            </tr>
+            <tr>
+                <td><b>Messages Sent</b></td>
+                <td>{{ stats.messagesSent }}</td>
+            </tr>
+            <tr>
+                <td><b>Successful Logins</b></td>
+                <td>{{ stats.successfulLogins }}</td>
+            </tr>
+            <tr>
+                <td><b>Failed Logins</b></td>
+                <td>{{ stats.failedLogins }}</td>
+            </tr>
+            <tr>
+                <td><b>Medications Prescribed</b></td>
+                <td>{{ stats.medicationsPrescribed }}</td>
+            </tr>
+            <tr>
+                <td><b>Tests Conducted</b></td>
+                <td>{{ stats.testsConducted }}</td>
+            </tr>
+            <tr>
+                <td><b>Notifications Received</b></td>
+                <td>{{ stats.notificationsReceived }}</td>
+            </tr>
+            <tr>
+                <td><b>Patients Admitted</b></td>
+                <td>{{ stats.patientsAdmitted }}</td>
+            </tr>
+            <tr>
+                <td><b>Oldest Birthdate</b></td>
+                <td>{{ stats.oldestUser }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+
+            $('.dataTables_filter').each(function () {
+                $(this).prepend('<h4 style="float: left;"><b>Click a patient to admit/discharge, or to view details</b></h4>');
+            });
+
+            $('#stats').DataTable({
+                "bLengthChange": false,
+                "language": {
+                    "emptyTable": "No data."
+                }
+            });
+        });
+    </script>
+{% endblock %}

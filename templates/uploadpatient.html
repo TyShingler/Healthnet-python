@@ -1,0 +1,30 @@
+<!-- Import NavBar & CDNs-->
+{% include 'navbar.html' %}
+
+<!-- HTML Content-->
+{% block content %}
+    <div class="well col-md-6 col-md-offset-3">
+        <form action="upload.php" method="post" enctype="multipart/form-data">
+            <h2 class="text-center">Import Profile
+                <Patient></Patient>
+            </h2>
+            <br>
+
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3">
+                    <label for="id_file">Select patient file to upload:</label>
+                    {% csrf_token %}
+                    {{ form.file }}
+                    <br>
+                    <input class="form-control btn btn-primary" type="submit" value="Upload Patient" name="submit">
+                </div>
+            </div>
+        </form>
+        <br>
+    </div>
+{% endblock %}
+
+<!-- JavaScript Content-->
+{% block javascript %}
+
+{% endblock %}

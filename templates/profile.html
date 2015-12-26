@@ -1,0 +1,87 @@
+<!-- Import NavBar & CDNs-->
+{% include 'navbar.html' %}
+
+<!-- HTML Content-->
+{% block content %}
+    <div class="well col-md-6 col-md-offset-3">
+        <h1 class="text-center">HealthNet Profile</h1>
+        <table id="profileTable" class="display" cellspacing="0" width="100%">
+            <tbody>
+            <tr>
+                <td><b>Username</b></td>
+                <td>{{ user.username }}</td>
+            </tr>
+            <tr>
+                <td><b>First Name</b></td>
+                <td>{{ user.first_name }}</td>
+            </tr>
+            <tr>
+                <td><b>Last Name</b></td>
+                <td>{{ user.last_name }}</td>
+            </tr>
+            <tr>
+                <td><b>Birthdate</b></td>
+                <td id="birthdate">{{ user.birthdate }}</td>
+            </tr>
+            <tr>
+                <td><b>Email</b></td>
+                <td>{{ user.email }}</td>
+            </tr>
+            <tr>
+                <td><b>Sex</b></td>
+                <td>{{ user.sex }}</td>
+            </tr>
+            <tr>
+                <td><b>Phone Number</b></td>
+                <td id="phone">{{ user.phone }}</td>
+            </tr>
+            <tr>
+                {% if user.usertype == 'patient' %}
+                    <td><b>Primary Hospital</b></td>
+                {% else %}
+                    <td><b>Employed Hospital</b></td>
+                {% endif %}
+                <td>{{ user.preferred_hospital }}</td>
+            </tr>
+            {% if user.usertype == 'patient' %}
+                <tr>
+                    <td><b>Last Physical</b></td>
+                    <td>{{ user.last_physical }}</td>
+                </tr>
+                <tr>
+                    <td><b>Primary Physician</b></td>
+                    <td>{{ user.primary_physician }}</td>
+                </tr>
+                <tr>
+                    <td><b>Health History</b></td>
+                    <td>{{ user.health_history }}</td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+        <br>
+
+        <div class="pull-right">
+            <a type="button" class="btn btn-primary" href="/editprofile">Edit Profile</a>
+        </div>
+    </div>
+{% endblock %}
+
+<!-- JavaScript Content-->
+{% block javascript %}
+
+    <script>
+        $(document).ready(function () {
+            table = $('#profileTable').DataTable({
+                "bLengthChange": false,
+                "language": {
+                    "emptyTable": "No data available."
+                }
+            });
+        });
+        var birthdate = moment("{{ user.birthdate }}");
+        document.getElementById("birthdate").innerText += " (" + birthdate.fromNow().replace(" years ago", "") + " years old)";
+        $('#phone').mask('(000) 000-0000');
+
+    </script>
+{% endblock %}

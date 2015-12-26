@@ -1,0 +1,111 @@
+{% include 'navbar.html' %}
+
+{% block content %}
+    <div class="well col-md-6 col-md-offset-3">
+        <form action="/editprofile/" method="POST">
+            <h1 class="text-center">Edit Your Profile</h1>
+
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_first_name">First Name</label>
+                            {{ form.first_name }}
+                            {{ errors.first_name }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_last_name">Last Name</label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="id_email">Email</label>
+                            {{ form.email }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_birthdate">Birthdate</label>
+                            {{ form.birthdate }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label id="l4" for="id_last_physical">Last Physical</label>
+                            {{ form.last_physical }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_sex">Sex</label>
+                            {{ form.sex }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_phone">Phone Number</label>
+                            {{ form.phone }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label id="l3" for="id_health_history">Health History</label>
+                            {{ form.health_history }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="pull-right">
+                        {% csrf_token %}
+                        <input type="submit" class="btn btn-primary" value="Save Changes"/>
+                        <a type="button" class="btn btn-primary"
+                           href="/{{ request.META.HTTP_REFERER|cut:"http://localhost:8000/" }}">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script src="http://cdn.jsdelivr.net/webshim/1.12.4/extras/modernizr-custom.js"></script>
+    <script src="http://cdn.jsdelivr.net/webshim/1.12.4/polyfiller.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.13.4/jquery.mask.js"></script>
+    <script>
+        $('#id_first_name').val('{{ user.first_name }}');
+        $('#id_last_name').val('{{ user.last_name }}')
+        $('#id_email').val('{{ user.email }}');
+        $('#id_birthdate').val('{{ user.birthdate|escapejs }}');
+        $('#id_last_physical').val('{{ user.last_physical|escapejs }}');
+        $('#id_sex').val('{{ user.sex }}');
+        $('#id_phone').val('{{ user.phone }}');
+        $('#id_preferred_hospital').val('{{ user.preferred_hospital }}');
+        $('#id_health_history').val('{{ user.health_history }}');
+
+        if ('{{ user.usertype }}' != 'patient') {
+            $('#id_preferred_hospital').hide();
+            $('#id_health_history').hide();
+            $('#id_last_physical').hide();
+            $('#l1').hide();
+            $('#l2').hide();
+            $('#l3').hide();
+            $('#l4').hide();
+        }
+
+        $('#id_phone').mask('(000) 000-0000', {placeholder: '(___) ___-____'});
+        webshims.setOptions('waitReady', false);
+        webshims.setOptions('forms-ext', {types: 'date'});
+        webshims.polyfill('forms forms-ext');
+    </script>
+{% endblock %}

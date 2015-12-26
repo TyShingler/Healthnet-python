@@ -1,0 +1,156 @@
+<!-- Import NavBar & CDNs-->
+{% include 'navbar.html' %}
+
+<!-- HTML Content-->
+{% block content %}
+    <div id="request" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/requesttest/" method="POST">
+                    <!-- Header-->
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Request A Test</h4>
+                    </div>
+
+                    <!-- Body / Render Forms-->
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            <div class="form-group">
+                                <label for="id_delete-doctor">Test Name: </label>
+                                {{ form.testname }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Create 'Cancel' and 'Create' Button-->
+                    <div class="modal-footer">
+                        {% csrf_token %}
+                        <input type="submit" class="pull-right btn btn-primary" value="Request Test">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="viewresults" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/requesttest/" method="POST">
+                    <!-- Header-->
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Test Results</h4>
+                    </div>
+
+                    <!-- Body / Render Forms-->
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            <table id="testresultstable" class="display" cellspacing="0" width="100%">
+                            <tbody>
+                            <tr>
+                                <td><b>Test Name: </b></td>
+                                <td id="testnametitle">testname</td>
+                            </tr>
+                            <tr>
+                                <td><b>Results: </b></td>
+                                <td id="testresults">testresults</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="well col-md-10 col-md-offset-1">
+        <table id="results" class="display" cellspacing="0" width="100%">
+            <thead>
+            <tr>
+                <th>Test Name</th>
+                <th>Date Submitted</th>
+                <th>Status</th>
+                <th>PK</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>Test Name</th>
+                <th>Date Submitted</th>
+                <th>Status</th>
+                <th>PK</th>
+            </tr>
+            </tfoot>
+            <tbody>
+            {% for test in tests %}
+                <tr>
+                    <td>{{ test.testname }}</td>
+                    <td>{{ test.date }}</td>
+                    {% if test.pending == 'true' %}
+                        <td>Pending</td>
+                    {% else %}
+                        <td>Finished</td>
+                    {% endif %}
+                    <td>{{ test.pk }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+<!-- JavaScript Content-->
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            $('#results').DataTable({
+                "bLengthChange": false,
+                "aaSorting": [2, 'asc'],
+                "language": {
+                    "emptyTable": "You have no test results."
+                },
+                "fnRowCallback": function (nRow, aData, iDisplayIndex) {
+                    $(nRow).click(function () {
+                        if(aData[2] != "Pending") {
+                            $('#viewresults').modal('show');
+                            {% for test in tests %}
+                                if ("{{ test.pk }}" == aData[3]) {
+                                    $('#testnametitle').html(aData[0]);
+                                    $('#testresults').html("{{ test.results }}");
+                                }
+                            {% endfor %}
+                        }
+                    });
+                    return nRow;
+                },
+                "columnDefs": [
+                    {
+                        "targets": [3],
+                        "visible": false,
+                        "searchable": false
+                    }
+                ]
+            });
+
+            $('.dataTables_filter').each(function () {
+                    $(this).prepend('<button class="btn btn-primary" style="float: left;" data-target="#request" data-toggle="modal">Request Medical Test</button>');
+            });
+
+            $('#request').on('shown.bs.modal', function () {
+                $('#id_testname').focus();
+            })
+
+            $('#testresultstable').DataTable({
+                "bLengthChange": false,
+                "language": {
+                    "emptyTable": "No data available."
+                }
+            });
+        });
+    </script>
+{% endblock %}

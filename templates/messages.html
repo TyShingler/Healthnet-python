@@ -1,0 +1,110 @@
+<!-- Import NavBar & CDNs-->
+{% include 'navbar.html' %}
+
+<!-- HTML Content-->
+{% block content %}
+    <div id="compose" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="frm" action="/sendmessage/" method="POST">
+                    <!-- Header-->
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Compose Message</h4>
+                    </div>
+
+                    <!-- Body / Render Forms-->
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            <div class="form-group">
+                                <label for="id_delete-doctor">To: </label>
+                                {{ form.receiver }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_delete-doctor">Message</label>
+                                {{ form.message }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Create 'Cancel' and 'Create' Button-->
+                    <div class="modal-footer">
+                        {% csrf_token %}
+                        <input type="submit" class="pull-right btn btn-primary" value="Send Message">
+                        <input type="submit" onclick="setText()" class="pull-right btn btn-primary" value="Send Text">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="well col-md-10 col-md-offset-1">
+        <table id="inbox" class="display" cellspacing="0" width="100%">
+            <thead>
+            <tr>
+                <th>Message</th>
+                <th>Sender</th>
+                <th>Recipient</th>
+                <th>Date</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>Message</th>
+                <th>Sender</th>
+                <th>Recipient</th>
+                <th>Date</th>
+            </tr>
+            </tfoot>
+            <tbody>
+            {% for msg in messages %}
+                <tr>
+                    <td>{{ msg.message }}</td>
+                    <td>{{ msg.sender }}</td>
+                    <td>{{ msg.receiver }}</td>
+                    <td>{{ msg.date }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+<!-- JavaScript Content-->
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            $('#inbox').DataTable({
+                "bLengthChange": false,
+                "language": {
+                    "emptyTable": "You have no messages."
+                },
+                "aaSorting": [2, 'desc']
+            });
+
+            $('.dataTables_filter').each(function () {
+                    $(this).prepend('<button class="btn btn-primary" style="float: left;" data-target="#compose" data-toggle="modal">Compose Message</button>');
+            });
+        });
+
+        $('#compose').on('shown.bs.modal', function () {
+            $('#id_message').focus();
+        })
+
+        {% for person in people %}
+            {% if person.usertype == 'doctor' %}
+                $("#id_receiver").append($("<option />").text("Dr." + " {{ person.last_name }} ({{ person.username }}):  {{ person.phone }}"));
+            {% elif person.usertype == 'patient' %}
+                $("#id_receiver").append($("<option />").text("{{ person.first_name }} {{ person.last_name }} ({{ person.username }}):  {{ person.phone }}"));
+            {% elif person.usertype == 'nurse' %}
+                $("#id_receiver").append($("<option />").text("Nurse {{ person.last_name }} ({{ person.username }}):  {{ person.phone }}"));
+            {% endif %}
+        {% endfor %}
+
+        function setText(){
+            num = document.getElementById("id_receiver").value;
+            $('#frm').get(0).setAttribute('action', '/sendtext/' + num.substr(-10));
+        }
+
+    </script>
+{% endblock %}

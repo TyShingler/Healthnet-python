@@ -1,0 +1,50 @@
+{% include 'navbar.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="well col-md-10 col-md-offset-1">
+            <table id="activities" class="display" cellspacing="0" width="100%">
+                <thead>
+                <tr>
+                    <th>Activity</th>
+                    <th>Date Logged</th>
+                </tr>
+                </thead>
+                <tfoot>
+                <tr>
+                    <th>Activity</th>
+                    <th>Date Logged</th>
+                </tr>
+                </tfoot>
+                <tbody>
+                {% for activity in log %}
+                    <tr>
+                        <td>{{ activity.data }}</td>
+                        <td>{{ activity.date }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            $('#activities').DataTable({
+                "language": {
+                    "emptyTable": "No registered activity."
+                },
+                "iDisplayLength": 15,
+                "bLengthChange": false,
+                "aaSorting": [1, 'desc']
+            });
+
+            $('.dataTables_filter').each(function () {
+                $(this).prepend('<h4 style="float: left;"><b>System Activity Log</b></h4>');
+            });
+        });
+
+
+    </script>
+{% endblock %}

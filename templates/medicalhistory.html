@@ -1,0 +1,56 @@
+<!-- Import NavBar & CDNs-->
+{% include 'navbar.html' %}
+
+<!-- HTML Content-->
+{% block content %}
+    <div class="well col-md-10 col-md-offset-1">
+
+        <h4><b>Medical History: </b></h4>{{ user.health_history }}
+        <br><br><br>
+        <table id="appointmentsTable" class="display" cellspacing="0" width="100%">
+            <thead>
+            <tr>
+                <th>Record</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>Record</th>
+            </tr>
+            </tfoot>
+            <tbody>
+            {% for test in tests %}
+                {% if test.pending == 'false' %}
+                    <tr>
+                        <td>You received results for your "{{ test.testname }}" test: {{ test.results }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+            {% for prescription in prescriptions %}
+                <tr>
+                    <td>You were prescribed the medication "{{ prescription.drugname }}"</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+<!-- JavaScript Content-->
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            $('#appointmentsTable').DataTable({
+                "bLengthChange": false,
+                "pageLength": 5,
+                "language": {
+                    "emptyTable": "You have no medical history."
+                }
+            });
+
+            $('.dataTables_filter').each(function () {
+                $(this).prepend('<h4 style="float: left;"><b>Click a record for more information<b></h4>');
+            });
+        });
+    </script>
+{% endblock %}

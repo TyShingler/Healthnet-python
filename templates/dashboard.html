@@ -1,0 +1,273 @@
+{% include 'navbar.html' %}
+
+{% block content %}
+    <!-- Render FullCalendar-->
+    <div class="well col-md-10 col-md-offset-1">
+        <p>
+        <div class="col-md-12 " id='calendar'></div>
+    </div>
+
+    <!-- Modal-->
+    <div id="createAppointment" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/createAppointment/" method="POST">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Schedule An Appointment (30 mins)</h4>
+                    </div>
+                    <!-- Body / Render Forms-->
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            {% if user.usertype == "patient" %}
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="id_create-doctor">Doctor</label></br>
+                                        {{ createForm.doctor }}
+                                    </div>
+                                </div>
+                            {% elif user.usertype == "doctor" %}
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="id_create-patient">Patient</label></br>
+                                        {{ createForm.p_first_name }}
+                                    </div>
+                                </div>
+                            {% elif user.usertype == "nurse" %}
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_create-patient">Patient</label></br>
+                                        {{ createForm.p_first_name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_create-patient">Doctor</label></br>
+                                        {{ createForm.doctor }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_create-date">Date</label></br>
+                                    {{ createForm.date }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_delete-date">Time (8AM - 5PM)</label>
+                                    {{ createForm.time }}
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="id_create-description">Description</label>
+                                    {{ createForm.description }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Create 'Cancel' and 'Create' Button-->
+                    <div class="modal-footer">
+                        {% csrf_token %}
+                        <input type="submit" class="btn btn-primary" value="Create">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewAppointment" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="deleteForm" action="/deleteAppointment/" method="POST">
+                    <!-- Header-->
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Appointment View</h4>
+                    </div>
+
+                    <!-- Body / Render Forms-->
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            {% if user.usertype == "nurse" %}
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_delete-doctor">Patient</label>
+                                        {{ deleteForm.p_first_name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_delete-doctor">Doctor</label>
+                                        {{ deleteForm.doctor }}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="id_delete-doctor">Doctor</label>
+                                        {{ deleteForm.doctor }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_delete-date">Date</label>
+                                    {{ deleteForm.date }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_delete-date">Time (8AM - 5PM)</label>
+                                    {{ deleteForm.time }}
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="id_delete-description">Description</label>
+                                    {{ deleteForm.description }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Create 'Cancel' and 'Create' Button-->
+                    <div class="modal-footer">
+                        {% csrf_token %}
+                        <input type="submit" onclick="setAsSave()" class="btn btn-primary" value="Save Changes">
+                        <input type="submit" class="btn btn-primary" value="Delete Appointment">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            if (window.location.href == 'http://localhost:8000/dashboard/apt') {
+                setDateAsToday();
+                $('#createAppointment').modal('show');
+                window.history.pushState('dashboard', 'HealthNet Overview', '/dashboard/');
+            }
+
+            var d = new Date();
+            var d2 = new Date();
+            d2.setHours(d.getHours() - 5);
+            document.getElementById('id_create-date').min = d2.toISOString().slice(0, 10);
+
+            var calendar;
+            calendar = $('#calendar').fullCalendar({
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,basicWeek,agendaDay'
+                },
+                dayClick: function (date, jsEvent, view) {
+                    d = new Date();
+                    d2 = new Date();
+                    d2.setHours(d.getHours() - 5);
+                    if (date < d2) {
+                        if (d2.getMinutes() > 30) {
+                            d2.setMinutes(0)
+                            d2.setHours(d2.getHours() + 1)
+                        }
+                        document.getElementById('id_create-date').value = d2.toISOString().slice(0, 10);
+                    } else {
+                        document.getElementById('id_create-date').value = date.toISOString();
+                    }
+                    $('#createAppointment').modal('show');
+                },
+
+                eventClick: function (calEvent, jsEvent, view) {
+                    {% for apt in appointments %}
+                        if (calEvent.id == "{{ apt.pk }}") {
+                            document.getElementById('deleteForm').action = "/deleteAppointment/" + "{{ apt.pk }}";
+                            $('#id_delete-doctor').val("Dr. " + calEvent.doctor);
+                            d = new Date(calEvent.start);
+                            d.setHours(d.getHours() - 5);
+                            document.getElementById('id_delete-date').value = d.toISOString().slice(0,10);
+                            document.getElementById('id_delete-time').value = d.toISOString().slice(11,16);
+                            document.getElementById('id_delete-description').value = calEvent.description;
+                        }
+                    {% endfor %}
+                    $('#viewAppointment').modal('show');
+                },
+                fixedWeekCount: false,
+                aspectRatio: 2.3,
+                selectable: true,
+                businessHours: {
+                    dow: [0, 1, 2, 3, 4, 5, 6],
+                    start: '08:00',
+                    end: '17:00'
+                },
+                viewRender: (function () {
+
+                    var lastViewName;
+                    return function (view, element) {
+                        if (view.name === 'agendaDay') {
+                            document.getElementById('css_day').disabled = false;
+                        } else if (view.name != 'agendaDay') {
+                            document.getElementById('css_day').disabled = true;
+                        }
+                        lastViewName = view.name;
+                    }
+                })()
+            });
+
+            $('#createAppointment').on('shown.bs.modal', function () {
+                $('#id_create-description').focus();
+            })
+
+            {% for apt in appointments %}
+                var newEvent = {
+                    {% if user.usertype == "patient" %}
+                        title: ("Dr. {{ apt.doctor }}"),
+                    {% else %}
+                        title: ("{{ apt.p_first_name }} {{ apt.p_last_name }}"),
+                    {% endif %}
+                    start: new Date("{{ apt.date|escapejs }}".slice(0, 16)),
+                    end: new Date("{{ apt.date|escapejs }}".slice(0, 16)),
+                    description: "{{ apt.description|escapejs }}",
+                    doctor: "{{ apt.doctor }}",
+                    p_username: "{{ apt.p_username }}",
+                    p_first_name: "{{ apt.p_first_name }}",
+                    p_last_name: "{{ apt.p_last_name }}",
+                    id: "{{ apt.pk }}"
+                };
+                newEvent.end.setMinutes(newEvent.end.getMinutes() + 30);
+                if (newEvent.end.getTime() < d2)
+                    newEvent.className = "gray-event";
+                calendar.fullCalendar('renderEvent', newEvent, true);
+            {% endfor %}
+
+            {% for option in listOptions %}
+                console.log("This ran")
+                {% if option.usertype == 'doctor' %}
+                    $("#id_create-doctor").append($("<option />").text("Dr." + " {{ option.last_name }}"));
+                    $("#id_delete-doctor").append($("<option />").text("Dr." + " {{ option.last_name }}"));
+                {% elif option.usertype == 'patient' %}
+                    $("#id_create-p_first_name").append($("<option />").text("{{ option.first_name }} {{ option.last_name }} ({{ option.username }})"));
+                    $("#id_delete-p_first_name").append($("<option />").text("{{ option.first_name }} {{ option.last_name }} ({{ option.username }})"));
+                {% endif %}
+            {% endfor %}
+        });
+
+        function setDateAsToday() {
+            var d = new Date();
+            var d2 = new Date();
+            d2.setHours(d.getHours() - 5);
+            document.getElementById('id_create-date').value = d2.toISOString().slice(0, 10);
+        }
+
+        function setAsSave() {
+            document.getElementById('deleteForm').action = "/editAppointment/" +
+                    document.getElementById('deleteForm').action.replace('http://localhost:8000/deleteAppointment/', '');
+        }
+    </script>
+{% endblock %}

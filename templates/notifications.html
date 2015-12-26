@@ -1,0 +1,97 @@
+<!-- Import NavBar & CDNs-->
+{% include 'navbar.html' %}
+
+<!-- HTML Content-->
+{% block content %}
+    <div class="well col-md-10 col-md-offset-1">
+        <table id="notifications" class="display" cellspacing="0" width="100%">
+            <thead>
+            <tr>
+                <th>Notification</th>
+                <th>Date</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>Notification</th>
+                <th>Date</th>
+            </tr>
+            </tfoot>
+            <tbody>
+            {% for notification in notes %}
+                <tr>
+                    {% if notification.type == 'appointment' %}
+                            {% if user.usertype == 'patient' %}
+                                {% if notification.user == user.username %}
+                                    <td>Appointment created with Dr. {{ notification.doctor }}</td>
+                                {% else %}
+                                    <td>Dr. {{ notification.doctor }} created an appointment with you</td>
+                                {% endif %}
+                            {% elif user.usertype == 'nurse' %}
+                                <td>{{ notification.user }} created appointment with {{ notification.doctor }}</td>
+                            {% elif user.usertype == 'doctor' %}
+                                {% if not notification.user == user.username %}
+                                    <td>{{ notification.data2 }} created appointment with you</td>
+                                {% else %}
+                                    <td>You created an appointment with {{ notification.data2 }}</td>
+                                {% endif %}
+                            {% endif %}
+                    {% elif notification.type == 'message' %}
+                        <td>{{ notification.data2 }} sent you a message: "<i>{{ notification.data }}</i>"</td>
+                    {% elif notification.type == 'prescription' %}
+                        <td>Dr. {{ notification.doctor }} prescribed you the drug: <i>{{ notification.data }}</i></td>
+                    {% elif notification.type == 'medicalresult' %}
+                        <td>You have received a result for your test: <i>{{ notification.data }}</i></td>
+                    {% elif notification.type == 'medicaltest' %}
+                        <td>You have a pending test request: <i>{{ notification.data }}</i></td>
+                    {% endif %}
+                    <td>{{ notification.date }}</td>
+                    <td>{{ notification.type }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+<!-- JavaScript Content-->
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            $('#notifications').DataTable({
+                "bLengthChange": false,
+                "aaSorting": [1, 'desc'],
+                "language": {
+                    "emptyTable": "You have no notifications."
+                },
+                "columnDefs": [
+                    {
+                        "targets": [ 2 ],
+                        "visible": false,
+                        "searchable": false
+                    }
+                ],
+                "fnRowCallback": function (nRow, aData, iDisplayIndex) {
+                    $(nRow).click(function () {
+                        if(aData[2] == 'appointment'){
+                            window.location.href = "/appointments/";
+                        } else if(aData[2] == 'message'){
+                            window.location.href = "/messages/";
+                        } else if(aData[2] == 'prescription'){
+                            window.location.href = "/prescriptions/";
+                        } else if(aData[2] == 'medicalresult'){
+                            window.location.href = "/testresults/";
+                        } else if(aData[2] == 'medicaltest') {
+                            window.location.href = "/pendingtests/";
+                        }
+                    });
+                    return nRow;
+                },
+            });
+
+            $('.dataTables_filter').each(function () {
+                $(this).prepend('<h4 style="float: left;"><b>Click a notification to go to its respective page</b></h4>');
+            });
+        });
+    </script>
+{% endblock %}
